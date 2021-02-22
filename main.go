@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-const version = "v0.1.7"
+const version = "v0.1.8"
 
 var usage = fmt.Sprintf(`Smug - tmux session manager. Version %s
 
@@ -79,12 +79,14 @@ func main() {
 		config, err := GetConfig(configPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, err.Error())
+			os.Exit(1)
 		}
 
 		err = smug.Start(config, options, context)
 		if err != nil {
 			fmt.Println("Oops, an error occurred! Rolling back...")
 			smug.Stop(config, options, context)
+			os.Exit(1)
 		}
 	case CommandStop:
 		if len(options.Windows) == 0 {
@@ -95,17 +97,19 @@ func main() {
 		config, err := GetConfig(configPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, err.Error())
+			os.Exit(1)
 		}
 
 		err = smug.Stop(config, options, context)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, err.Error())
+			os.Exit(1)
 		}
-	case CommandNew:
-	case CommandEdit:
+	case CommandNew, CommandEdit:
 		err := EditConfig(configPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, err.Error())
+			os.Exit(1)
 		}
 	}
 

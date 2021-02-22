@@ -4,7 +4,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -115,8 +114,7 @@ func (smug Smug) Start(config Config, options Options, context Context) error {
 			windowRoot = filepath.Join(sessionRoot, w.Root)
 		}
 
-		window := sessionName + w.Name
-		_, err := smug.tmux.NewWindow(sessionName, w.Name, windowRoot)
+		window, err := smug.tmux.NewWindow(sessionName, w.Name, windowRoot)
 		if err != nil {
 			return err
 		}
@@ -128,33 +126,33 @@ func (smug Smug) Start(config Config, options Options, context Context) error {
 			}
 		}
 
-		layout := w.Layout
-		if layout == "" {
-			layout = EvenHorizontal
-		}
-
-		_, err = smug.tmux.SelectLayout(sessionName+w.Name, layout)
-		if err != nil {
-			return err
-		}
-
-		for pIndex, p := range w.Panes {
+		for _, p := range w.Panes {
 			paneRoot := ExpandPath(p.Root)
 			if paneRoot == "" || !filepath.IsAbs(p.Root) {
 				paneRoot = filepath.Join(windowRoot, p.Root)
 			}
 
-			_, err := smug.tmux.SplitWindow(window, p.Type, paneRoot)
+			newPane, err := smug.tmux.SplitWindow(window, p.Type, paneRoot)
 			if err != nil {
 				return err
 			}
 
 			for _, c := range p.Commands {
-				err = smug.tmux.SendKeys(window+"."+strconv.Itoa(pIndex+1), c)
+				err = smug.tmux.SendKeys(window+"."+newPane, c)
 				if err != nil {
 					return err
 				}
 			}
+		}
+
+		layout := w.Layout
+		if layout == "" {
+			layout = EvenHorizontal
+		}
+
+		_, err = smug.tmux.SelectLayout(window, layout)
+		if err != nil {
+			return err
 		}
 	}
 
