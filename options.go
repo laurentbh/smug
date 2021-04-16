@@ -13,9 +13,10 @@ const (
 	CommandNew   = "new"
 	CommandEdit  = "edit"
 	CommandList  = "list"
+	CommandPrint = "print"
 )
 
-var validCommands = []string{CommandStart, CommandStop, CommandNew, CommandEdit, CommandList}
+var validCommands = []string{CommandStart, CommandStop, CommandNew, CommandEdit, CommandList, CommandPrint}
 
 type Options struct {
 	Command string
@@ -23,6 +24,7 @@ type Options struct {
 	Config  string
 	Windows []string
 	Attach  bool
+	Detach  bool
 	Debug   bool
 }
 
@@ -31,6 +33,7 @@ var ErrHelp = errors.New("help requested")
 const (
 	WindowsUsage = "List of windows to start. If session exists, those windows will be attached to current session."
 	AttachUsage  = "Force switch client for a session"
+	DetachUsage  = "Detach tmux session. The same as -d flag in the tmux"
 	DebugUsage   = "Print all commands to ~/.config/smug/smug.log"
 	FileUsage    = "A custom path to a config file"
 )
@@ -64,6 +67,7 @@ func ParseOptions(argv []string, helpRequested func()) (Options, error) {
 	config := flags.StringP("file", "f", "", FileUsage)
 	windows := flags.StringArrayP("windows", "w", []string{}, WindowsUsage)
 	attach := flags.BoolP("attach", "a", false, AttachUsage)
+	detach := flags.Bool("detach", false, DetachUsage)
 	debug := flags.BoolP("debug", "d", false, DebugUsage)
 
 	err := flags.Parse(argv)
@@ -87,5 +91,13 @@ func ParseOptions(argv []string, helpRequested func()) (Options, error) {
 		windows = &wl
 	}
 
-	return Options{cmd, project, *config, *windows, *attach, *debug}, nil
+	return Options{
+		Project: project,
+		Config:  *config,
+		Command: cmd,
+		Windows: *windows,
+		Attach:  *attach,
+		Detach:  *detach,
+		Debug:   *debug,
+	}, nil
 }
